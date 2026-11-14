@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#145c4b">
+  <meta name="description" content="Catat pengeluaran bersama, bagi dengan tepat, lalu selesaikan patungan.">
+  <title>BagiNota · Patungan jadi terang</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a href="./" class="brand" aria-label="BagiNota beranda"><img src="./icon.svg" width="37" height="37" alt=""><span>BagiNota<small>PATUNGAN JADI TERANG</small></span></a>
+    <div class="header-note"><span class="status-dot"></span> Tersimpan di browser ini</div>
+    <button class="button quiet" id="help-button" type="button">Cara pakai <span aria-hidden="true">→</span></button>
+  </header>
+
+  <main class="container">
+    <div class="storage-error" id="storage-error" role="alert" hidden>
+      <h2>Data lokal belum bisa dibuka</h2><p id="storage-error-text"></p>
+      <div class="toolbar"><button class="button" id="download-raw" type="button">Unduh data yang tersimpan</button><button class="button danger" id="reset-storage" type="button">Reset data lokal</button><button class="button" id="retry-storage" type="button">Coba lagi</button></div>
+    </div>
+    <div class="external-change" id="external-change" role="status" hidden>Data berubah di tab lain. Muat ulang sebelum melanjutkan. <button class="link-button" id="reload-data" type="button">Muat ulang data</button></div>
+
+    <section class="intro" aria-labelledby="group-title">
+      <div>
+        <div class="eyebrow">CATAT. BAGI. BERES.</div>
+        <div class="title-line"><h1 id="group-title">Patungan baru</h1><button class="icon-button" id="group-button" type="button" title="Atur patungan" aria-label="Atur patungan">✎</button></div>
+        <p>Satu catatan bersama. Setiap Rupiah jelas bagiannya.</p>
+      </div>
+      <div class="toolbar intro-actions"><button class="button" id="import-button" type="button">Impor backup</button><button class="button" id="export-button" type="button">↓ Unduh backup</button><button class="icon-button" id="print-button" type="button" title="Cetak ringkasan" aria-label="Cetak ringkasan">⎙</button></div>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </section>
+
+    <section class="stats" aria-label="Ringkasan patungan">
+      <article class="stat stat-total"><span class="stat-label">Total pengeluaran</span><strong id="total-amount">Rp0</strong><small id="expense-count">0 pengeluaran tercatat</small></article>
+      <article class="stat"><span class="stat-label">Anggota patungan</span><strong id="member-count">0 orang</strong><button class="link-button" id="members-button" type="button">Kelola anggota <span aria-hidden="true">→</span></button></article>
+      <article class="stat"><span class="stat-label">Masih perlu diselesaikan</span><strong id="outstanding-amount">Rp0</strong><small id="settlement-count">Tambahkan pengeluaran pertama</small></article>
+    </section>
+
+    <div class="workspace">
+      <section class="journal panel" aria-labelledby="journal-title">
+        <div class="panel-heading"><div><div class="eyebrow">BUKU PATUNGAN</div><h2 id="journal-title">Pengeluaran bersama</h2></div><button class="button primary" id="add-expense" type="button">+ Pengeluaran</button></div>
+        <div class="journal-filter"><label class="search-label" for="expense-search"><span aria-hidden="true">⌕</span><input id="expense-search" type="search" placeholder="Cari nama pengeluaran…" maxlength="100"></label><label class="visually-hidden" for="payer-filter">Filter pembayar</label><select id="payer-filter"><option value="">Semua pembayar</option></select></div>
+        <div id="expense-list" class="expense-list"></div>
+        <div class="empty-state" id="empty-state"><div class="empty-illustration" aria-hidden="true"><span>Rp</span><i>✓</i></div><h3>Mulai dari satu pengeluaran.</h3><p>Tambahkan anggota, catat siapa yang membayar,<br>lalu biarkan BagiNota menghitung bagiannya.</p><div class="toolbar"><button class="button primary" id="start-members" type="button">Tambah anggota</button><button class="button" id="demo-button" type="button">Coba data contoh</button></div><small>Data contoh sepenuhnya sintetis.</small></div>
+        <p class="filter-empty" id="filter-empty" hidden>Tidak ada pengeluaran yang cocok dengan pencarian.</p>
+        <div class="journal-footer"><span class="small-dot"></span> Pembagian tepat hingga Rupiah terakhir.</div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel balances-panel" aria-labelledby="balances-title"><div class="panel-heading"><div><div class="eyebrow">POSISI SAAT INI</div><h2 id="balances-title">Saldo anggota</h2></div><span class="badge">Rupiah bulat</span></div><div class="balance-legend"><span><i class="legend-dot receive"></i> Menerima</span><span><i class="legend-dot owe"></i> Membayar</span></div><div id="balances"></div><p class="subtle compact" id="balance-empty">Belum ada anggota. Tambahkan teman patunganmu.</p></section>
+        <section class="panel transfers-panel" aria-labelledby="transfers-title"><div class="panel-heading"><div><div class="eyebrow">LANGKAH BERIKUTNYA</div><h2 id="transfers-title">Saran transfer</h2></div><span class="count-badge" id="transfer-count">0</span></div><div id="transfers"></div><p class="subtle compact" id="transfer-empty">Saran muncul setelah pengeluaran dicatat.</p><p class="transfer-footnote">Catat hanya setelah transfer benar-benar dilakukan. Aplikasi tidak mengirim uang.</p><button class="button full" id="copy-button" type="button">Salin ringkasan patungan</button></section>
+      </aside>
+    </div>
+
+    <section class="panel payment-panel" aria-labelledby="payment-title"><div class="panel-heading"><div><div class="eyebrow">SUDAH DICATAT</div><h2 id="payment-title">Riwayat transfer</h2></div><span class="subtle" id="payment-count">0 transfer</span></div><div id="payment-list"></div><p class="subtle compact" id="payment-empty">Belum ada transfer yang dicatat.</p></section>
+    <footer class="page-footer"><span>BagiNota <span class="footer-version">/ 1.0</span></span><p>Data tetap di browser ini. Unduh backup sebelum pindah perangkat atau menghapus data browser.</p><button class="link-button" id="demo-footer" type="button">Muat contoh sintetis</button></footer>
+  </main>
+
+  <dialog id="members-dialog" aria-labelledby="members-title">
+    <div class="dialog-heading"><div><div class="eyebrow">SIAPA SAJA YANG IKUT?</div><h2 id="members-title">Atur patungan</h2></div><button class="icon-button" data-close type="button" aria-label="Tutup pengaturan">×</button></div>
+    <form id="title-form" class="title-form"><label for="title-input">Nama patungan</label><div class="inline-form"><input id="title-input" maxlength="80" required><button class="button" type="submit">Simpan nama</button></div></form>
+    <div class="section-label">ANGGOTA <span id="member-limit"></span></div>
+    <div id="member-editor" class="member-editor"></div>
+    <form id="member-form"><label for="member-name">Anggota baru</label><div class="inline-form"><input id="member-name" placeholder="Nama temanmu" maxlength="40" required autocomplete="off"><button class="button primary" type="submit">Tambah</button></div></form>
+    <p class="subtle small">Urutan anggota menentukan penerima sisa Rp1 saat pecahannya sama. Anggota yang dipakai dalam catatan tidak dapat dihapus.</p>
+    <p class="form-error" id="members-error" role="alert" hidden></p>
+    <div class="dialog-footer"><button class="button primary" data-close type="button">Selesai</button></div>
+  </dialog>
+
+  <dialog id="expense-dialog" aria-labelledby="expense-title">
+    <div class="dialog-heading"><div><div class="eyebrow">CATAT PENGELUARAN</div><h2 id="expense-title">Pengeluaran baru</h2></div><button class="icon-button" data-close type="button" aria-label="Tutup pengeluaran">×</button></div>
+    <form id="expense-form">
+      <label for="expense-label">Untuk apa?</label><input id="expense-label" placeholder="Misalnya: makan bersama" maxlength="100" required>
+      <div class="form-grid"><div><label for="expense-amount">Nominal (Rp)</label><input id="expense-amount" inputmode="numeric" placeholder="100.000" required autocomplete="off"><small class="field-hint">Rupiah bulat, maksimal 1 miliar.</small></div><div><label for="expense-date">Tanggal</label><input id="expense-date" type="date" min="1900-01-01" max="2199-12-31" required></div></div>
+      <label for="expense-payer">Dibayar oleh</label><select id="expense-payer" required></select>
+      <div class="participants-heading"><div><h3>Siapa yang ikut patungan?</h3><p>Bobot 1 : 2 berarti bagian kedua dua kali lebih besar.</p></div><button class="link-button" id="equal-weights" type="button">Samakan bobot</button></div>
+      <div id="participants" class="participants"></div>
+      <div class="split-check" id="split-check" aria-live="polite">Isi nominal untuk melihat pembagian.</div>
+      <p class="subtle small" id="payment-edit-warning" hidden>Pengubahan pengeluaran menghitung ulang saldo. Transfer yang sudah dicatat tetap berlaku.</p>
+      <p class="form-error" id="expense-error" role="alert" hidden></p>
+      <div class="dialog-footer"><button class="button" data-close type="button">Batal</button><button class="button primary" type="submit">Simpan pengeluaran</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="payment-dialog" class="narrow-dialog" aria-labelledby="confirm-payment-title">
+    <div class="dialog-heading"><div><div class="eyebrow">KONFIRMASI PENCATATAN</div><h2 id="confirm-payment-title">Sudah ditransfer?</h2></div><button class="icon-button" data-close type="button" aria-label="Tutup transfer">×</button></div>
+    <p id="payment-description" class="payment-description"></p><div class="payment-amount" id="payment-amount"></div>
+    <p class="subtle">Ini hanya mencatat pembayaran yang sudah kamu lakukan di luar aplikasi.</p>
+    <form id="payment-form"><label for="payment-actual">Nominal yang sudah ditransfer (Rp)</label><input id="payment-actual" inputmode="numeric" required><small class="field-hint" id="payment-hint">Boleh sebagian. Sisa saldo tetap muncul dalam saran.</small><label for="payment-date">Tanggal transfer</label><input type="date" id="payment-date" min="1900-01-01" max="2199-12-31" required><p class="form-error" id="payment-error" role="alert" hidden></p><div class="dialog-footer"><button class="button" data-close type="button">Batal</button><button class="button primary" type="submit">Ya, catat transfer</button></div></form>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="narrow-dialog" aria-labelledby="confirm-title"><div class="dialog-heading"><h2 id="confirm-title"></h2><button class="icon-button" data-close type="button" aria-label="Tutup konfirmasi">×</button></div><p id="confirm-description" class="subtle"></p><p class="form-error" id="confirm-error" role="alert" hidden></p><div class="dialog-footer"><button class="button" data-close type="button">Batal</button><button class="button primary" id="confirm-action" type="button">Lanjutkan</button></div></dialog>
+
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><div><div class="eyebrow">DARI CATATAN KE PELUNASAN</div><h2 id="help-title">Patungan, selangkah demi selangkah</h2></div><button class="icon-button" data-close type="button" aria-label="Tutup panduan">×</button></div><ol class="help-steps"><li><strong>Tambahkan anggota.</strong><p>Beri nama patungan, lalu masukkan orang-orang yang ikut.</p></li><li><strong>Catat siapa membayar apa.</strong><p>Pilih peserta tiap pengeluaran. Gunakan bobot berbeda jika porsinya berbeda.</p></li><li><strong>Lihat saldo dan saran transfer.</strong><p>Hijau berarti berhak menerima, cokelat berarti masih perlu membayar.</p></li><li><strong>Catat setelah uang ditransfer.</strong><p>Saldo akan berubah. Jika keliru, batalkan catatan dari riwayat transfer.</p></li><li><strong>Simpan backup.</strong><p>Satu browser menyimpan satu patungan aktif. Unduh JSON sebelum memulai patungan lain. Mengimpor backup menggantikan seluruh data aktif.</p></li></ol><div class="explanation"><strong>Ke mana sisa Rp1 pergi?</strong><p>Rp100.001 dibagi tiga menjadi Rp33.334, Rp33.334, dan Rp33.333. Sisa dibagikan berdasarkan pecahan terbesar; jika sama, mengikuti urutan anggota. Total selalu tepat.</p></div><p class="subtle small">Gunakan satu tab aktif. Data tidak tersinkron ke perangkat lain. Saran transfer valid untuk menyelesaikan saldo, tetapi tidak dijamin memakai jumlah transfer paling sedikit.</p><div class="dialog-footer"><button class="button primary" data-close type="button">Mengerti</button></div></dialog>
+
+  <dialog id="copy-dialog" aria-labelledby="copy-title"><div class="dialog-heading"><h2 id="copy-title">Ringkasan patungan</h2><button class="icon-button" data-close type="button" aria-label="Tutup ringkasan">×</button></div><p class="subtle">Salin teks berikut jika browser tidak mengizinkan penyalinan otomatis.</p><label class="visually-hidden" for="copy-text">Teks ringkasan</label><textarea id="copy-text" readonly rows="15"></textarea><div class="dialog-footer"><button class="button primary" data-close type="button">Selesai</button></div></dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="storage-error">Aktifkan JavaScript untuk memakai BagiNota.</p></noscript>
+</body>
+</html>
