@@ -1,5 +1,10 @@
 # BagiNota
 
+**[Coba langsung di browser](https://mavianza-lab.amav1305.chatgpt.site/coba/baginota/)** · [Galeri Mavianza Lab](https://mavianza-lab.amav1305.chatgpt.site/)
+
+Versi online dapat dipakai tanpa instalasi atau akun. Data tersimpan di browser dan domain yang dipakai; gunakan backup JSON untuk memindahkan data dari versi lokal.
+
+
 **Catat pengeluaran, bagi dengan tepat, lalu bereskan patungan.**
 
 BagiNota adalah aplikasi web lokal untuk teman kos, kelompok perjalanan, atau
